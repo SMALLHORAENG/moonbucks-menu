@@ -2,7 +2,7 @@
 // 조건에 따라 필요한 것 생각해보기
 /* 요구사항 분석
     TODO 메뉴 추가
-        메뉴이름 받고 엔터키 입력으로 추가됨
+        메뉴이름 받고 엔터키 입력으로 추가됨 + 확인버튼을 클릭도 포함
         추가되는 메뉴의 마크업은 '<ul id="espresso-menu-list" class="mt-3 pl-0"></ul>' 안에 삽입되야 함
         총 메뉴 개수를 count 해서 상단에 보여줌
         메뉴가 추가되고 나면, input은 빈 값으로 초기화 함
@@ -30,11 +30,16 @@ function App(){
         e.preventDefault();
     });
 
-    //메뉴의 이름을 입력받음
-    $("#espresso-menu-name")
-    .addEventListener("keypress", (e) => {
-        console.log(e.key);
-    if(e.key === "Enter"){
+    //메뉴추가 함수
+    const addMenuName = () => {
+        //빈값이면 알림뜨고 엔터 안되게 하기
+    if($("#espresso-menu-name").value === ""){
+        alert("값을 입력해주세요.");
+        //리턴 해주면 뒷 부분 동작이 안되기 때문에 입력해도 안나옴
+        return;
+    }
+        //이전에 작성해둔 엔터누르면 실행되는 코드, 아무것도 없이 엔터하면 안되게 작성을 위해 위로 수정이동
+        //if(e.key === "Enter"){
         //메뉴이름 받아서 저장하는 변수
         const espressoMenuName = $("#espresso-menu-name").value;
         // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
@@ -75,9 +80,31 @@ function App(){
             "beforeend",
             menuItemTemplate(espressoMenuName)
         );
+        //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
+        //querySelector을 이요해서 li태그 가져올 수 있는데 가장 첫번째 것 가져옴
+        //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
+        const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
+        $(".menu-count").innerText = `총 ${menuCount} 개`;
+        //input 비우기
+        $("#espresso-menu-name").value = "";
     }
+    
+    //버튼 클릭시 메뉴추가됨 (함수안에 빈 값이면 실행 안되게 해둔 것 있음)
+    $("#espresso-menu-submit-button").addEventListener("click", (e) => {
+        addMenuName();
     });
-};
+
+    //메뉴의 이름을 입력받음
+    $("#espresso-menu-name")
+    .addEventListener("keypress", (e) => {
+        console.log(e.key);
+    if(e.key !== "Enter"){
+        return;
+    }
+    //입력받은 값이 엔터가 아니면 return 되고 엔터가 맞다면 메뉴추가 함수가 실행된다
+    addMenuName();
+});
+}
 App();
 
 
