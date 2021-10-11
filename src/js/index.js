@@ -17,15 +17,67 @@
         확인 버튼을 클릭하면 메뉴가 삭제됨
 */
 
+//html의 element를 가져올 때 $표시를 관용적으로 사용 함, id값을 받는 querySelector를 리턴해주는걸 의미함
+// querySelector() 이 $가 되는 것
+const $ = (selector) => document.querySelector(selector);
+
+    //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
+    //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
+    //.value를 통해서 지정된 것 값을 받아옴, form태그 때문에 엔터치면 새로고침 됨, 해결법은 위 코드에
 function App(){
+    //form태그 자동전송 막기 (preventDefault();)
+    $("#espresso-menu-form").addEventListener("submit",(e) => {
+        e.preventDefault();
+    });
+
     //메뉴의 이름을 입력받음
-    document.querySelector("#espresso-menu-name")
+    $("#espresso-menu-name")
     .addEventListener("keypress", (e) => {
         console.log(e.key);
-    });
-    //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e라는 값 보내주는것)
+    if(e.key === "Enter"){
+        //메뉴이름 받아서 저장하는 변수
+        const espressoMenuName = $("#espresso-menu-name").value;
+        // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
+        //espressMenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
+        const menuItemTemplate = (espressoMenuName) => {
+            return `
+        <li class="menu-list-item d-flex items-center py-2">
 
-}
+        <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
+        
+        <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+        >
+          수정
+        </button>
+
+        <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+        >
+          삭제
+        </button>
+        </li>`;
+    };
+
+// <!-- beforebegin -->
+// <ul>
+// <!-- afterbegin -->
+// <li></li>
+// <!-- beforeend -->
+// </ul>
+// <!-- afterend -->
+
+//innerHTML 속성을 이용해 HTML에 넣을 수 있음, return된 템플릿을 넣어주면 됨
+//.insertAdjacentHTML("위치",넣는변수(인자)); 해주면 innerHTML + 위치설정 가능하다
+        $("#espresso-menu-list").insertAdjacentHTML(
+            "beforeend",
+            menuItemTemplate(espressoMenuName)
+        );
+    }
+    });
+};
 App();
 
 
@@ -87,4 +139,4 @@ https://blog.makerjun.com/24443069-e1b0-416c-9e64-a27392487a5a
 원래 있던것에서 오류가 생겨서 수정한 값 - 기존값을 갖고있는 중괄호
 부분의 내용을 아래로 내리니 오류가 사라짐 (root 때문으로 보임)
 
-*/
+*/ 
