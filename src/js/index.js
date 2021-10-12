@@ -23,24 +23,63 @@
         리펙터링 - 중복 줄이고, 가독성 높게 함수로 만들어주는 것
         (함수선언을 위에 추가,수정,삭제로 해주고 아래에서 호출하는 방식으로 수정해봤음)
 
+        주석의 설명은 주석 아래의 코드를 설명함
+        함수의 경우 어떤걸 위한 함수인지는 마지막에 적어둠
+
 */
+// step 2
+/* 요구사항 분석
+    TODO 데이터 저장 , 읽어오기
+        localStorage에 데이터를 저장한다.
+        localStorage에 있는 데이터를 읽어온다.
+
+    TODO 카테고리별 메뉴판 관리
+        에스프레소,프라푸치노,블렌디드,티바나,디저트 메뉴판 관리
+
+    TODO 페이지 접근시 최초 데이터 읽기,랜더링
+        페이지에 최초 로딩 때 localStorage에 에스프레소 메뉴 읽어온다.
+        에스프레소 메뉴를 페이지에 그려준다.
+
+    TODO 품질 상태 관리
+        품절 상태인 경우를 보여줄 수 있게, 품질 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다
+        품절 버튼을 추가한다.
+        품절 버튼을 클릭하면 localStorage에 상태값이 저장된다.
+        클릭이벤트에서 가장 가까운 li태그의 class속성 값에 sold-out을 추가한다.    
+
+        * 상태 = 데이터,변할 수 있는 데이터 * 
+
+*/
+
 
 
 //html의 element를 가져올 때 $표시를 관용적으로 사용 함, id값을 받는 querySelector를 리턴해주는걸 의미함
 // querySelector() 이 $가 되는 것
 const $ = (selector) => document.querySelector(selector);
 
+//저장하는 변수
+//localStorage는 문자열만 저장을 해줘야 하기 때문에 JSON.stringify()문자열로 저장하기 위해 사용
+const store = {
+    setLocalStorage(menu){
+        localStorage.setItem("menu",JSON.stringify(menu));
+    },
+    getLocalStorage(){
+        localStorage.getItem("menu");
+    },
+};
+
     //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
     //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
     //.value를 통해서 지정된 것 값을 받아옴, form태그 때문에 엔터치면 새로고침 됨, 해결법은 위 코드에
 function App(){
+    //메뉴명 관리(App함수가 갖고있는 상태이기 때문), this는 전역변수 값을 가져옴
+    //메뉴가 여러개이기 때문에 초기화를 해주는것이 좋다
+    this.menu = [];
 
     //form태그 자동전송 막기 (preventDefault();)
     $("#espresso-menu-form").addEventListener("submit",(e) => {
         e.preventDefault();
     }); //자동전송 제어
 
-    
     //생성 부분에서 가져온 것
     //메뉴 업데이트시 카운트 함수
     const UpdateMenuCount = () => {
@@ -56,17 +95,28 @@ function App(){
         //리턴 해주면 뒷 부분 동작이 안되기 때문에 입력해도 안나옴
         return;
     }
+
         //이전에 작성해둔 엔터누르면 실행되는 코드, 아무것도 없이 엔터하면 안되게 작성을 위해 위로 수정이동
         //if(e.key === "Enter"){
         //메뉴이름 받아서 저장하는 변수
         const espressoMenuName = $("#espresso-menu-name").value;
-        // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
-        //espressMenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
-        const menuItemTemplate = (espressoMenuName) => {
-            return `
+
+        //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
+        this.menu.push({ name: espressoMenuName });
+
+        //localStorage에 저장
+        store.setLocalStorage(this.menu);
+
+        //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
+        //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
+        //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
+        //['<li></li>', '<li></li>'] 이런식으로
+        const template = this.menu
+            .map((item) => {
+        return`
         <li class="menu-list-item d-flex items-center py-2">
 
-        <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
+        <span class="w-100 pl-2 menu-name">${item.name}</span>
         
         <button
           type="button"
@@ -82,7 +132,35 @@ function App(){
           삭제
         </button>
         </li>`;
-    };
+        // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
+        //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
+        })
+        .join("");
+
+
+        // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
+        //espressMenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
+        // const menuItemTemplate = (espressoMenuName) => {
+        //     return `
+        // <li class="menu-list-item d-flex items-center py-2">
+
+        // <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
+        
+        // <button
+        //   type="button"
+        //   class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+        // >
+        //   수정
+        // </button>
+
+        // <button
+        //   type="button"
+        //   class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+        // >
+        //   삭제
+        // </button>
+        // </li>`;
+        // }; 위에 template으로 만들어줬기 때문에 안씀
 
 // <!-- beforebegin -->
 // <ul>
@@ -94,16 +172,18 @@ function App(){
 
 //innerHTML 속성을 이용해 HTML에 넣을 수 있음, return된 템플릿을 넣어주면 됨
 //.insertAdjacentHTML("위치",넣는변수(인자)); 해주면 innerHTML + 위치설정 가능하다
-        $("#espresso-menu-list").insertAdjacentHTML(
-            "beforeend",
-            menuItemTemplate(espressoMenuName)
-        );
+        $("#espresso-menu-list").innerHTML = template;
+            // 한꺼번에 바꿔줄 것 이기에 insertAdjacentHTML을 사용하지 않음
+            // .insertAdjacentHTML(
+            // "beforeend",
+            // menuItemTemplate(espressoMenuName)
+            // );
+
         //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
         //querySelector을 이요해서 li태그 가져올 수 있는데 가장 첫번째 것 가져옴
         //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
-        const menuCount =
-        $("#espresso-menu-list").querySelectorAll("li").length;
-        $(".menu-count").innerText = `총 ${menuCount} 개`;
+
+        UpdateMenuCount();
 
         //input 비우기
         $("#espresso-menu-name").value = "";
@@ -177,7 +257,7 @@ function App(){
     });
 }
 
-App();
+const app = new App();
 
 
 
