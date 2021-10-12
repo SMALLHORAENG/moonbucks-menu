@@ -15,7 +15,16 @@
     TODO 메뉴 삭제
         메뉴 삭제 버튼 클릭 이벤트를 받고, 메뉴 삭제 컨펌 모달창이 뜸
         확인 버튼을 클릭하면 메뉴가 삭제됨
+
+
+    *   Event.target는 부모로부터 이벤트가 위임되어 발생하는 자식의 위치, 내가 클릭한 자식 요소를 반환한다. 
+        event.currentTarget은 부모 요소인 button을 반환하는 것을 알 수 있다. * 
+
+        리펙터링 - 중복 줄이고, 가독성 높게 함수로 만들어주는 것
+        (함수선언을 위에 추가,수정,삭제로 해주고 아래에서 호출하는 방식으로 수정해봤음)
+
 */
+
 
 //html의 element를 가져올 때 $표시를 관용적으로 사용 함, id값을 받는 querySelector를 리턴해주는걸 의미함
 // querySelector() 이 $가 되는 것
@@ -25,10 +34,19 @@ const $ = (selector) => document.querySelector(selector);
     //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
     //.value를 통해서 지정된 것 값을 받아옴, form태그 때문에 엔터치면 새로고침 됨, 해결법은 위 코드에
 function App(){
+
     //form태그 자동전송 막기 (preventDefault();)
     $("#espresso-menu-form").addEventListener("submit",(e) => {
         e.preventDefault();
-    });
+    }); //자동전송 제어
+
+    
+    //생성 부분에서 가져온 것
+    //메뉴 업데이트시 카운트 함수
+    const UpdateMenuCount = () => {
+        const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
+        $(".menu-count").innerText = `총 ${menuCount} 개`;
+    };
 
     //메뉴추가 함수
     const addMenuName = () => {
@@ -83,16 +101,69 @@ function App(){
         //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
         //querySelector을 이요해서 li태그 가져올 수 있는데 가장 첫번째 것 가져옴
         //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
-        const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
+        const menuCount =
+        $("#espresso-menu-list").querySelectorAll("li").length;
         $(".menu-count").innerText = `총 ${menuCount} 개`;
+
         //input 비우기
         $("#espresso-menu-name").value = "";
-    }
+    } 
     
+    //메뉴수정 함수, 수정하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
+    const updateMenuName = (e) => {
+            //e.target.closest("li").querySelector(".menu-name")을 하나의 변수로 만들어서 사용함(코드 가독성)
+            const $menuName = e.target.closest("li").querySelector(".menu-name");
+
+            //가까운 li태그를 찾아가야 메뉴이름 받아올 수 있으니 closest 사용해서 태그찾고
+            //menu-name 클래스의 들어간 텍스트값을 받는다
+            // const menuName = $menuName.innerText; -> upDatedMenuName 부분에 넣어준다
+
+            //prompt("표시할 내용",디폴트값);
+            //prompt를 통해서 받은 값은 수정된 값, 디폴트값은 수정받은 텍스트를 담는 변수이기도 함 
+            const upDatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
+
+            //받아온 li태그의 menu-name 클래스가 들어간 곳의 innerText를 입력한 값을 넣어서 수정해줌
+            $menuName.innerText = upDatedMenuName;
+    }
+
+    //메뉴삭제 함수, 삭제하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
+    const removeMenuName = (e) => {
+                //찾은 태그의 가장 가까운것을 찾아주기 때문에 잘 작동됨(클릭한 곳에서 가장 가까운 li태그)
+                //remove는 ()로 마무리 해줘야 작동 됨
+                e.target.closest("li").remove();
+                //생성때 해준 count부분을 함수로 만들어서 사용
+                UpdateMenuCount();
+    }
+
+
+
     //버튼 클릭시 메뉴추가됨 (함수안에 빈 값이면 실행 안되게 해둔 것 있음)
-    $("#espresso-menu-submit-button").addEventListener("click", (e) => {
-        addMenuName();
-    });
+    $("#espresso-menu-submit-button").addEventListener("click", addMenuName); //추가
+    //괄호에 넣지 않아도 되기 때문에 이렇게 줄여줌
+
+
+    //이벤트 위임(상위 태그에게 이벤트 위임 해두는 것) - 없는 태그를 위해서
+    //addMenuName 부분에 보면 버튼을 추가해뒀고 그 버튼의 class명이 다르다
+    $("#espresso-menu-list").addEventListener("click", (e) => {
+        //classList를 통해서 클래스들 가져올 수 있다, contains를 통해 해당 클래스 있는지 확인가능
+        if(e.target.classList.contains("menu-edit-button")){
+            //호출때도 인자값을 e로 잘 받아와야 함
+            updateMenuName(e);
+        }
+    }); //수정
+
+
+    $("#espresso-menu-list").addEventListener("click", (e) => {
+        
+        if(e.target.classList.contains("menu-remove-button")){
+
+            if(confirm("정말 삭제하시겠습니까?")){
+                //전달받은 인자가 있어야 잘 작동함
+                removeMenuName(e);
+            }
+        }
+    }); //삭제
+
 
     //메뉴의 이름을 입력받음
     $("#espresso-menu-name")
@@ -103,8 +174,9 @@ function App(){
     }
     //입력받은 값이 엔터가 아니면 return 되고 엔터가 맞다면 메뉴추가 함수가 실행된다
     addMenuName();
-});
+    });
 }
+
 App();
 
 
