@@ -31,6 +31,8 @@
 /* 요구사항 분석
     TODO 데이터 저장 , 읽어오기
         localStorage에 데이터를 저장한다.
+         -메뉴 추가할 때 , 수정할 때, 삭제할 때
+        
         localStorage에 있는 데이터를 읽어온다.
 
     TODO 카테고리별 메뉴판 관리
@@ -60,10 +62,13 @@ const $ = (selector) => document.querySelector(selector);
 //localStorage는 문자열만 저장을 해줘야 하기 때문에 JSON.stringify()문자열로 저장하기 위해 사용
 const store = {
     setLocalStorage(menu){
+        //문자열로 저장은 stringify
         localStorage.setItem("menu",JSON.stringify(menu));
     },
     getLocalStorage(){
-        localStorage.getItem("menu");
+        //리턴을 해줘야 init에서 값을 받을 수 있음
+        //문자열로 저장된 데이터를 JSON 객체로 다시 해주는 것은 parse
+        return JSON.parse(localStorage.getItem("menu"));
     },
 };
 
@@ -73,7 +78,75 @@ const store = {
 function App(){
     //메뉴명 관리(App함수가 갖고있는 상태이기 때문), this는 전역변수 값을 가져옴
     //메뉴가 여러개이기 때문에 초기화를 해주는것이 좋다
-    this.menu = [];
+    this.menu = {
+        //메뉴판별로 배열을 만들어서 초기화
+        espresso: [],
+        frappuccino: [],
+        blended: [],
+        teavana: [],
+        desert: [],
+    }; //초기화 안하면 어떤 데이터값이 들어갈 지 모르기때문에 push 안됨(협업에서도 필요함)
+
+    //현재 카테고리상태
+    //바뀌는 값이고 디폴트로 조건에 맞춰 espresso로 해둔 것
+    this.currentCategory = 'espresso';
+
+    //새로고침시 localstorage에 데이터가 있는지 확인하고 있으면 this.menu에 넣어주는 것
+    this.init = () => {
+        //localStorage에 데이터가 있으면
+        if(store.getLocalStorage()){
+            this.menu = store.getLocalStorage();
+        }
+        render();
+    };
+
+    //그려주는, 렌더링 해주는 함수
+    const render = () => {
+        //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
+        //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
+        //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
+        //['<li></li>', '<li></li>'] 이런식으로
+        const template = this.menu[this.currentCategory]
+            .map((item,index) => {
+        return`
+        <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">
+
+        <span class="w-100 pl-2 menu-name">${item.name}</span>
+        
+        <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+        >
+          수정
+        </button>
+
+        <button
+          type="button"
+          class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+        >
+          삭제
+        </button>
+        </li>`;
+        // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
+        //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
+        })
+        .join("");
+
+        //innerHTML 속성을 이용해 HTML에 넣을 수 있음, return된 템플릿을 넣어주면 됨
+        //.insertAdjacentHTML("위치",넣는변수(인자)); 해주면 innerHTML + 위치설정 가능하다
+        $("#espresso-menu-list").innerHTML = template;
+        // 한꺼번에 바꿔줄 것 이기에 insertAdjacentHTML을 사용하지 않음
+        // .insertAdjacentHTML(
+        // "beforeend",
+        // menuItemTemplate(espressoMenuName)
+        // );
+
+        //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
+        //querySelector을 이요해서 li태그 가져올 수 있는데 가장 첫번째 것 가져옴
+        //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
+
+        UpdateMenuCount();
+    }
 
     //form태그 자동전송 막기 (preventDefault();)
     $("#espresso-menu-form").addEventListener("submit",(e) => {
@@ -102,41 +175,11 @@ function App(){
         const espressoMenuName = $("#espresso-menu-name").value;
 
         //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
-        this.menu.push({ name: espressoMenuName });
+        //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
+        this.menu[this.currentCategory].push({ name: espressoMenuName });
 
         //localStorage에 저장
         store.setLocalStorage(this.menu);
-
-        //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
-        //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
-        //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
-        //['<li></li>', '<li></li>'] 이런식으로
-        const template = this.menu
-            .map((item) => {
-        return`
-        <li class="menu-list-item d-flex items-center py-2">
-
-        <span class="w-100 pl-2 menu-name">${item.name}</span>
-        
-        <button
-          type="button"
-          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-        >
-          수정
-        </button>
-
-        <button
-          type="button"
-          class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-        >
-          삭제
-        </button>
-        </li>`;
-        // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
-        //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
-        })
-        .join("");
-
 
         // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
         //espressMenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
@@ -162,6 +205,8 @@ function App(){
         // </li>`;
         // }; 위에 template으로 만들어줬기 때문에 안씀
 
+        render();
+
 // <!-- beforebegin -->
 // <ul>
 // <!-- afterbegin -->
@@ -170,27 +215,16 @@ function App(){
 // </ul>
 // <!-- afterend -->
 
-//innerHTML 속성을 이용해 HTML에 넣을 수 있음, return된 템플릿을 넣어주면 됨
-//.insertAdjacentHTML("위치",넣는변수(인자)); 해주면 innerHTML + 위치설정 가능하다
-        $("#espresso-menu-list").innerHTML = template;
-            // 한꺼번에 바꿔줄 것 이기에 insertAdjacentHTML을 사용하지 않음
-            // .insertAdjacentHTML(
-            // "beforeend",
-            // menuItemTemplate(espressoMenuName)
-            // );
-
-        //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
-        //querySelector을 이요해서 li태그 가져올 수 있는데 가장 첫번째 것 가져옴
-        //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
-
-        UpdateMenuCount();
-
         //input 비우기
         $("#espresso-menu-name").value = "";
     } 
     
     //메뉴수정 함수, 수정하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
     const updateMenuName = (e) => {
+            //마크업 부분에 생성할 때 만들어준 id값인 index를 가져옴
+            //dataset속성을 이용해서 데이터속성에 접근 가능(속성이 동적으로 만들어져서 활용가능)
+            const menuId = e.target.closest("li").dataset.menuId;
+        
             //e.target.closest("li").querySelector(".menu-name")을 하나의 변수로 만들어서 사용함(코드 가독성)
             const $menuName = e.target.closest("li").querySelector(".menu-name");
 
@@ -202,17 +236,36 @@ function App(){
             //prompt를 통해서 받은 값은 수정된 값, 디폴트값은 수정받은 텍스트를 담는 변수이기도 함 
             const upDatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
 
+            //클릭한 메뉴 아이템 어떤 원소인지 아는 방법은 유일한 ID값 추가
+            //데이터 생성하는 부분에서 data-menu-id=""${index}로 해주는데
+            //menuItem이 아니라 배열의 값을 index로 함(유일한 값으로 안되기 때문에 새로 생성한 것)
+            this.menu[menuId].name = upDatedMenuName;
+
+            //메뉴가 업데이트 되게 하기위함 (최대한 데이터 변경을 최소화 해주는것이 좋음)
+            store.setLocalStorage(this.menu);
+
             //받아온 li태그의 menu-name 클래스가 들어간 곳의 innerText를 입력한 값을 넣어서 수정해줌
             $menuName.innerText = upDatedMenuName;
-    }
+    };
 
     //메뉴삭제 함수, 삭제하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
     const removeMenuName = (e) => {
+            if(confirm("정말 삭제하시겠습니까?")){
+                //삭제할 것을 알기위한 menuId 가져오기
+                const menuId = e.target.closest("li").dataset.menuId;
+                //splice는 배열의 특정 원소를 삭제 괄호는(삭제 할 배열, 몇개를 삭제할지)
+                this.menu.splice(menuId, 1); //문제점 : 두번째 배열을 삭제하거나 하면 순서에 안맞게 삭제됨
+                //localStorage업데이트
+                store.setLocalStorage(this.menu);
+
                 //찾은 태그의 가장 가까운것을 찾아주기 때문에 잘 작동됨(클릭한 곳에서 가장 가까운 li태그)
                 //remove는 ()로 마무리 해줘야 작동 됨
-                e.target.closest("li").remove();
+                // e.target.closest("li").remove();
+
                 //생성때 해준 count부분을 함수로 만들어서 사용
-                UpdateMenuCount();
+                UpdateMenuCount(e);
+                render();
+            }
     }
 
 
@@ -234,14 +287,11 @@ function App(){
 
 
     $("#espresso-menu-list").addEventListener("click", (e) => {
-        
         if(e.target.classList.contains("menu-remove-button")){
-
-            if(confirm("정말 삭제하시겠습니까?")){
-                //전달받은 인자가 있어야 잘 작동함
-                removeMenuName(e);
-            }
+            //전달받은 인자가 있어야 잘 작동함
+            removeMenuName(e);
         }
+        
     }); //삭제
 
 
@@ -255,10 +305,26 @@ function App(){
     //입력받은 값이 엔터가 아니면 return 되고 엔터가 맞다면 메뉴추가 함수가 실행된다
     addMenuName();
     });
+
+    //다른 메뉴판으로 갈 때 이벤트
+    $("nav").addEventListener("click", (e) => {
+        //클래스 cafe-category-name인거 있는지 찾는 함수
+        const isCategoryButton = e.target.classList.contains("cafe-category-name");
+        
+        //true , false로 값을 받아오기 때문에 함수이름으로 넣어줌
+        if(isCategoryButton){
+            //카테고리 이름 불러와서 categoryName에 넣어줌
+            const categoryName = e.target.dataset.categoryName;
+
+        }
+    })
+
+
 }
 
+//App 실행, app.init을 실행
 const app = new App();
-
+app.init();
 
 
 
