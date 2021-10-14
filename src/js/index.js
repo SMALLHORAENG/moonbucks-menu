@@ -89,7 +89,7 @@ function App(){
 
     //현재 카테고리상태
     //바뀌는 값이고 디폴트로 조건에 맞춰 espresso로 해둔 것
-    this.currentCategory = 'espresso';
+    this.currentCategory = "espresso";
 
     //새로고침시 localstorage에 데이터가 있는지 확인하고 있으면 this.menu에 넣어주는 것
     this.init = () => {
@@ -102,16 +102,17 @@ function App(){
 
     //그려주는, 렌더링 해주는 함수
     const render = () => {
-        //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
+        //map 메소드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
         //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
         //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
         //['<li></li>', '<li></li>'] 이런식으로
         const template = this.menu[this.currentCategory]
-            .map((item,index) => {
+        //map는 모든 배열의 아이템에 함수를 실행하는 메소드   
+        .map((menuItem, index) => {
         return`
-        <li data-menu-id=${index} class="menu-list-item d-flex items-center py-2">
+        <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
 
-        <span class="w-100 pl-2 menu-name">${item.name}</span>
+        <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
         
         <button
           type="button"
@@ -128,7 +129,7 @@ function App(){
         </button>
         </li>`;
         // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
-        //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
+        //join이라는 메소드 이용시 문자열을 하나로 합쳐줌
         })
         .join("");
 
@@ -146,7 +147,7 @@ function App(){
         //그래서 querySelectorAll 해주면 모든 태그를 가져올 수 있음 개수를 세는 방법은 .length 해주면 됨
 
         UpdateMenuCount();
-    }
+    };
 
     //form태그 자동전송 막기 (preventDefault();)
     $("#espresso-menu-form").addEventListener("submit",(e) => {
@@ -177,7 +178,6 @@ function App(){
         //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
         //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
         this.menu[this.currentCategory].push({ name: espressoMenuName });
-
         //localStorage에 저장
         store.setLocalStorage(this.menu);
 
@@ -217,7 +217,7 @@ function App(){
 
         //input 비우기
         $("#espresso-menu-name").value = "";
-    } 
+    };
     
     //메뉴수정 함수, 수정하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
     const updateMenuName = (e) => {
@@ -266,7 +266,7 @@ function App(){
                 UpdateMenuCount(e);
                 render();
             }
-    }
+    };
 
 
 
@@ -309,15 +309,15 @@ function App(){
     //다른 메뉴판으로 갈 때 이벤트
     $("nav").addEventListener("click", (e) => {
         //클래스 cafe-category-name인거 있는지 찾는 함수
-        const isCategoryButton = e.target.classList.contains("cafe-category-name");
+        const isCategoryButton = e.target.classList.contains("cafe-category-name")
         
         //true , false로 값을 받아오기 때문에 함수이름으로 넣어줌
         if(isCategoryButton){
             //카테고리 이름 불러와서 categoryName에 넣어줌
             const categoryName = e.target.dataset.categoryName;
-
+            console.log(categoryName);
         }
-    })
+    });
 
 
 }
