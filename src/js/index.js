@@ -3,7 +3,7 @@
 /* 요구사항 분석
     TODO 메뉴 추가
         메뉴이름 받고 엔터키 입력으로 추가됨 + 확인버튼을 클릭도 포함
-        추가되는 메뉴의 마크업은 '<ul id="espresso-menu-list" class="mt-3 pl-0"></ul>' 안에 삽입되야 함
+        추가되는 메뉴의 마크업은 '<ul id="menu-list" class="mt-3 pl-0"></ul>' 안에 삽입되야 함
         총 메뉴 개수를 count 해서 상단에 보여줌
         메뉴가 추가되고 나면, input은 빈 값으로 초기화 함
         사용자 입력값이 빈 값이면 추가되지 않음
@@ -109,37 +109,49 @@ function App(){
         const template = this.menu[this.currentCategory]
         //map는 모든 배열의 아이템에 함수를 실행하는 메서드   
         .map((menuItem, index) => {
+        //menuItem.name은 입력한 메뉴의 이름을 나타내고 index는 배열을 나타냄 
+        //menuItem.soldOut는 품절인지에 대해서 나와서 삼항연산자고 품절이면 soldOut클래스가 추가됨 아니면 추가X
         return`
         <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
 
-        <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
-        
+        <span class="${menuItem.soldOut ? 'sold-out' : ""} w-100 pl-2 menu-name 
+        ">${menuItem.name}</span>
+
         <button
-          type="button"
-          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button"
         >
-          수정
+            품절
         </button>
 
         <button
-          type="button"
-          class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
         >
-          삭제
+            수정
+        </button>
+
+        <button
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+        >
+            삭제
         </button>
         </li>`;
         // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
         //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
         })
+       
         .join("");
+        console.log(this.menu[this.currentCategory]);
 
         //innerHTML 속성을 이용해 HTML에 넣을 수 있음, return된 템플릿을 넣어주면 됨
         //.insertAdjacentHTML("위치",넣는변수(인자)); 해주면 innerHTML + 위치설정 가능하다
-        $("#espresso-menu-list").innerHTML = template;
+        $("#menu-list").innerHTML = template;
         // 한꺼번에 바꿔줄 것 이기에 insertAdjacentHTML을 사용하지 않음
         // .insertAdjacentHTML(
         // "beforeend",
-        // menuItemTemplate(espressoMenuName)
+        // menuItemTemplate(MenuName)
         // );
 
         //메뉴 카운트 (li개수를 카운팅), 변수 명 클래스명을 활용해서 만드는게 이해하기 좋음
@@ -150,21 +162,21 @@ function App(){
     };
 
     //form태그 자동전송 막기 (preventDefault();)
-    $("#espresso-menu-form").addEventListener("submit",(e) => {
+    $("#menu-form").addEventListener("submit",(e) => {
         e.preventDefault();
     }); //자동전송 제어
 
     //생성 부분에서 가져온 것
     //메뉴 업데이트시 카운트 함수
     const UpdateMenuCount = () => {
-        const menuCount = $("#espresso-menu-list").querySelectorAll("li").length;
+        const menuCount = $("#menu-list").querySelectorAll("li").length;
         $(".menu-count").innerText = `총 ${menuCount} 개`;
     };
 
     //메뉴추가 함수
     const addMenuName = () => {
         //빈값이면 알림뜨고 엔터 안되게 하기
-    if($("#espresso-menu-name").value === ""){
+    if($("#menu-name").value === ""){
         alert("값을 입력해주세요.");
         //리턴 해주면 뒷 부분 동작이 안되기 때문에 입력해도 안나옴
         return;
@@ -173,21 +185,21 @@ function App(){
         //이전에 작성해둔 엔터누르면 실행되는 코드, 아무것도 없이 엔터하면 안되게 작성을 위해 위로 수정이동
         //if(e.key === "Enter"){
         //메뉴이름 받아서 저장하는 변수
-        const espressoMenuName = $("#espresso-menu-name").value;
+        const MenuName = $("#menu-name").value;
 
         //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
         //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
-        this.menu[this.currentCategory].push({ name: espressoMenuName });
+        this.menu[this.currentCategory].push({ name: MenuName });
         //localStorage에 저장
         store.setLocalStorage(this.menu);
 
         // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
-        //espressMenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
-        // const menuItemTemplate = (espressoMenuName) => {
+        //MenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
+        // const menuItemTemplate = (MenuName) => {
         //     return `
         // <li class="menu-list-item d-flex items-center py-2">
 
-        // <span class="w-100 pl-2 menu-name">${espressoMenuName}</span>
+        // <span class="w-100 pl-2 menu-name">${MenuName}</span>
         
         // <button
         //   type="button"
@@ -216,7 +228,7 @@ function App(){
 // <!-- afterend -->
 
         //input 비우기
-        $("#espresso-menu-name").value = "";
+        $("#menu-name").value = "";
     };
     
     //메뉴수정 함수, 수정하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
@@ -269,35 +281,51 @@ function App(){
             }
     };
 
+    //메뉴품절 함수, 
+    const soldOutMenu = (e) => {
+        const menuId = e.target.closest("li").dataset.menuId;
+        //클릭할 때 현재 카테고리의 menuId의 값이 soldOut가 true가 됨
+        //추가로 불 연산자(논리연산자)를 사용해서 다시 클릭해서 품절상태를 없애기 위해 적용
+        //처음 값인 undefined의 값에서 !를 사용해서 true의 값이 나오고 또 클릭시 반대되는 false가 나온다
+        this.menu[this.currentCategory][menuId].soldOut = 
+        //!는 논리적부정을 의미함 - 값을 반대로 바꿔줌 treu -> false
+         !this.menu[this.currentCategory][menuId].soldOut;
+        store.setLocalStorage(this.menu);
+        //render 해서 soldout이면 soldout 클래스를 넣고 아니면 안넣는 것 render함수에서 구현 (span부분)
+        render();
+    }
 
 
     //버튼 클릭시 메뉴추가됨 (함수안에 빈 값이면 실행 안되게 해둔 것 있음)
-    $("#espresso-menu-submit-button").addEventListener("click", addMenuName); //추가
+    $("#menu-submit-button").addEventListener("click", addMenuName); //추가
     //괄호에 넣지 않아도 되기 때문에 이렇게 줄여줌
-
 
     //이벤트 위임(상위 태그에게 이벤트 위임 해두는 것) - 없는 태그를 위해서
     //addMenuName 부분에 보면 버튼을 추가해뒀고 그 버튼의 class명이 다르다
-    $("#espresso-menu-list").addEventListener("click", (e) => {
+    $("#menu-list").addEventListener("click", (e) => {
         //classList를 통해서 클래스들 가져올 수 있다, contains를 통해 해당 클래스 있는지 확인가능
+        //if문 여러개의 경우 하나의 조건이 만족하면 다른 것 확인 안해도 되니 return을 해주는것이 좋음(습관화 하기)
         if(e.target.classList.contains("menu-edit-button")){
-            //호출때도 인자값을 e로 잘 받아와야 함
+            //호출때도 인자값을 e로 잘 받아와야 함 , 수정 로직
             updateMenuName(e);
-        }
-    }); //수정
+            return;
+        }; //수정
 
-
-    $("#espresso-menu-list").addEventListener("click", (e) => {
         if(e.target.classList.contains("menu-remove-button")){
-            //전달받은 인자가 있어야 잘 작동함
+            //전달받은 인자가 있어야 잘 작동함 , 삭제 로직
             removeMenuName(e);
-        }
-        
-    }); //삭제
+            return;
+        }; //삭제
 
+        if(e.target.classList.contains("menu-sold-out-button")){
+            //soldout 로직
+            soldOutMenu(e);
+            return;
+        }; //품절
+    });
 
     //메뉴의 이름을 입력받음
-    $("#espresso-menu-name")
+    $("#menu-name")
     .addEventListener("keypress", (e) => {
         console.log(e.key);
     if(e.key !== "Enter"){
@@ -317,7 +345,11 @@ function App(){
             //카테고리 이름 불러와서 categoryName에 넣어줌
             const categoryName = e.target.dataset.categoryName;
             this.currentCategory = categoryName;
-            console.log(categoryName);
+            
+            //html에 category-title라는 id값을 <h2> 부분인 타이틀에 추가해준 뒤 불러와서 넣어주기
+            $("#category-title").innerText = `${e.target.innerText} 메뉴 관리`;
+            
+            render();
         }
     });
 
