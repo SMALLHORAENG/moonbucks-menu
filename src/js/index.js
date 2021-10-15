@@ -102,12 +102,12 @@ function App(){
 
     //그려주는, 렌더링 해주는 함수
     const render = () => {
-        //map 메소드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
+        //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
         //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
         //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
         //['<li></li>', '<li></li>'] 이런식으로
         const template = this.menu[this.currentCategory]
-        //map는 모든 배열의 아이템에 함수를 실행하는 메소드   
+        //map는 모든 배열의 아이템에 함수를 실행하는 메서드   
         .map((menuItem, index) => {
         return`
         <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
@@ -129,7 +129,7 @@ function App(){
         </button>
         </li>`;
         // html태그에 넣으려면 하나의 마크업이 되야함(객체 형태로 바로 넣을 수 없으므로)
-        //join이라는 메소드 이용시 문자열을 하나로 합쳐줌
+        //join이라는 메서드 이용시 문자열을 하나로 합쳐줌
         })
         .join("");
 
@@ -239,7 +239,8 @@ function App(){
             //클릭한 메뉴 아이템 어떤 원소인지 아는 방법은 유일한 ID값 추가
             //데이터 생성하는 부분에서 data-menu-id=""${index}로 해주는데
             //menuItem이 아니라 배열의 값을 index로 함(유일한 값으로 안되기 때문에 새로 생성한 것)
-            this.menu[menuId].name = upDatedMenuName;
+            //this.menu[menuId].name = upDatedMenuName;
+            this.menu[this.currentCategory][menuId].name = upDatedMenuName;
 
             //메뉴가 업데이트 되게 하기위함 (최대한 데이터 변경을 최소화 해주는것이 좋음)
             store.setLocalStorage(this.menu);
@@ -254,7 +255,7 @@ function App(){
                 //삭제할 것을 알기위한 menuId 가져오기
                 const menuId = e.target.closest("li").dataset.menuId;
                 //splice는 배열의 특정 원소를 삭제 괄호는(삭제 할 배열, 몇개를 삭제할지)
-                this.menu.splice(menuId, 1); //문제점 : 두번째 배열을 삭제하거나 하면 순서에 안맞게 삭제됨
+                this.menu[this.currentCategory].splice(menuId, 1);
                 //localStorage업데이트
                 store.setLocalStorage(this.menu);
 
@@ -315,6 +316,7 @@ function App(){
         if(isCategoryButton){
             //카테고리 이름 불러와서 categoryName에 넣어줌
             const categoryName = e.target.dataset.categoryName;
+            this.currentCategory = categoryName;
             console.log(categoryName);
         }
     });
