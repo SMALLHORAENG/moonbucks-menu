@@ -52,31 +52,66 @@
 
 */
 
+// step 3
+/* 요구사항 분석
+    TODO 서버 요청 부분
+        웹 서버를 띄운다.
+        서버에 새로운 메뉴명을 추가될 수 있도록 요청한다.
+        서버에 카테고리별 메뉴리스트를 불러온다.
+        서버에 메뉴가 수정 될 수 있도록 요청한다
+        서버에 메뉴의 품절상태를 토글(두가지 상태 반전)될 수 있도록 요청한다.
+        서버에 메뉴가 삭제 될 수 있도록 요청한다.
 
+    TODO 리펙터링 부분
+        localStorage에 저장하는 조릭은 지운다.
+        fetch 비동기 api를 사용하는 부분을 async await을 사용하여 구현한다.
+
+    TODO 사용자 경험
+        API 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert으로 예외처리를 진행한다.
+        중복되는 메뉴는 추가 할 수 없다.
+
+        웹 서버 띄우는 방법
+            (https://github.com/blackcoffee-study/moonbucks-menu-server) 링크타고 들어가서
+            메뉴 서버 들어가서 저장소를 local에 클론하기 위해서
+            git clone https://github.com/blackcoffee-study/moonbucks-menu-server.git (이 부분 복사)
+            터미널에서 붙여넣기 해서 내 로컬에 클론해주기
+            그리고 cd moonbucks-menu-server 로 디렉토리를 이동해서
+            npm install 을 해줘서 npm을 설치
+            그리고 npm start 해서 웹서버를 구동시켜주면 된다
+
+*/
+
+
+
+import { $ } from "./utils/dom.js";
+import store from "./store/index.js";
 
 //html의 element를 가져올 때 $표시를 관용적으로 사용 함, id값을 받는 querySelector를 리턴해주는걸 의미함
 // querySelector() 이 $가 되는 것
-const $ = (selector) => document.querySelector(selector);
+// const $ = (selector) => document.querySelector(selector);
+// 이 부분은 dom.js로 옮겨서 사용
 
 //저장하는 변수
 //localStorage는 문자열만 저장을 해줘야 하기 때문에 JSON.stringify()문자열로 저장하기 위해 사용
-const store = {
-    setLocalStorage(menu){
-        //문자열로 저장은 stringify
-        localStorage.setItem("menu",JSON.stringify(menu));
-    },
-    getLocalStorage(){
-        //리턴을 해줘야 init에서 값을 받을 수 있음
-        //문자열로 저장된 데이터를 JSON 객체로 다시 해주는 것은 parse
-        return JSON.parse(localStorage.getItem("menu"));
-    },
-};
+// const store = {
+//     setLocalStorage(menu){
+//         //문자열로 저장은 stringify
+//         localStorage.setItem("menu",JSON.stringify(menu));
+//     },
+//     getLocalStorage(){
+//         //리턴을 해줘야 init에서 값을 받을 수 있음
+//         //문자열로 저장된 데이터를 JSON 객체로 다시 해주는 것은 parse
+//         return JSON.parse(localStorage.getItem("menu"));
+//     },
+// };
+// 이 부분은 store폴더의 index.js로 이동
 
     //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
     //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
     //.value를 통해서 지정된 것 값을 받아옴, form태그 때문에 엔터치면 새로고침 됨, 해결법은 위 코드에
+    //한 파일에 객체 하나인것이 좋음 선언하는걸 대표하는 파일명을 만드는데 어려움이 있기 때문
 function App(){
-    //메뉴명 관리(App함수가 갖고있는 상태이기 때문), this는 전역변수 값을 가져옴
+    //메뉴명 관리(App함수가 갖고있는 상태이기 때문), this는 전역변수 값을 가져옴(객체자신을 가르킴)
     //메뉴가 여러개이기 때문에 초기화를 해주는것이 좋다
     this.menu = {
         //메뉴판별로 배열을 만들어서 초기화
@@ -98,6 +133,7 @@ function App(){
             this.menu = store.getLocalStorage();
         }
         render();
+        initEventListeners();
     };
 
     //그려주는, 렌더링 해주는 함수
@@ -161,16 +197,15 @@ function App(){
         UpdateMenuCount();
     };
 
-    //form태그 자동전송 막기 (preventDefault();)
-    $("#menu-form").addEventListener("submit",(e) => {
-        e.preventDefault();
-    }); //자동전송 제어
-
     //생성 부분에서 가져온 것
     //메뉴 업데이트시 카운트 함수
     const UpdateMenuCount = () => {
-        const menuCount = $("#menu-list").querySelectorAll("li").length;
-        $(".menu-count").innerText = `총 ${menuCount} 개`;
+        // 수정 전
+        // const menuCount = $("#menu-list").querySelectorAll("li").length;
+        // $(".menu-count").innerText = `총 ${menuCount} 개`;
+        // 수정 후
+        const menuCount = this.menu[this.currentCategory].length;
+        $(".menu-count").innerText = `총 ${this.menu[this.currentCategory].length} 개`;
     };
 
     //메뉴추가 함수
@@ -258,7 +293,8 @@ function App(){
             store.setLocalStorage(this.menu);
 
             //받아온 li태그의 menu-name 클래스가 들어간 곳의 innerText를 입력한 값을 넣어서 수정해줌
-            $menuName.innerText = upDatedMenuName;
+            //$menuName.innerText = upDatedMenuName; -> render() 함수를 이용해서 리펙터링
+            render();
     };
 
     //메뉴삭제 함수, 삭제하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
@@ -273,11 +309,11 @@ function App(){
 
                 //찾은 태그의 가장 가까운것을 찾아주기 때문에 잘 작동됨(클릭한 곳에서 가장 가까운 li태그)
                 //remove는 ()로 마무리 해줘야 작동 됨
-                // e.target.closest("li").remove();
+                // e.target.closest("li").remove(); -> render() 함수를 이용해서 리펙터링
+                render();
 
                 //생성때 해준 count부분을 함수로 만들어서 사용
-                UpdateMenuCount(e);
-                render();
+                // UpdateMenuCount(e);
             }
     };
 
@@ -295,6 +331,13 @@ function App(){
         render();
     }
 
+
+    //이 함수안에 이벤트를 추가하면 되기 떄문에 분리해서 사용하기에 유용하다
+    const initEventListeners = () => {
+    //form태그 자동전송 막기 (preventDefault();)
+    $("#menu-form").addEventListener("submit",(e) => {
+        e.preventDefault();
+    }); //자동전송 제어
 
     //버튼 클릭시 메뉴추가됨 (함수안에 빈 값이면 실행 안되게 해둔 것 있음)
     $("#menu-submit-button").addEventListener("click", addMenuName); //추가
@@ -352,7 +395,7 @@ function App(){
             render();
         }
     });
-
+    }
 
 }
 
@@ -419,3 +462,5 @@ https://blog.makerjun.com/24443069-e1b0-416c-9e64-a27392487a5a
 부분의 내용을 아래로 내리니 오류가 사라짐 (root 때문으로 보임)
 
 */ 
+
+
