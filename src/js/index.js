@@ -106,6 +106,11 @@ import store from "./store/index.js";
 // };
 // 이 부분은 store폴더의 index.js로 이동
 
+//"liveServer.settings.port": 3000, 를 이용해서 live server의 JSON을 수정해주면 포트번호 바꿀 수 있다
+    const BASE_URL = "http://localhost:3000/api"; //사용할 때 현재 주소를 알 수 있도록 해줘야 함
+    //fetch('url',옵션) 주소와 옵션 , 얻어오다는 의미 (요청주소 보내면 , 옵션으로 구체적 약속을 넣어줌)
+    
+
     //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
     //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
     //.value를 통해서 지정된 것 값을 받아옴, form태그 때문에 엔터치면 새로고침 됨, 해결법은 위 코드에
@@ -224,7 +229,21 @@ function App(){
 
         //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
         //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
-        this.menu[this.currentCategory].push({ name: MenuName });
+        //this.menu[this.currentCategory].push({ name: MenuName }); , 서버와 통신을 위해 아래코드 사용
+
+        //새로운 메뉴 추가를 요청하기 위함 (서버에 요청하는 로직 , 위 주석된 코드는 상태를 추가하는 로직)
+        //객체 생성은 POST라는 메서드 사용, 주고받는 컨텐츠 타입은 주로 json형태로 주고받음
+        //localStorage에 데이터를 저장할 때 문자열로 저장하느라 JSON.stringify 이용 (키, 값 넣어서 요청)
+        fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, { //현재 주소까지 해줘야 잘 작동함
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({name:MenuName}),
+        }).then((response) => { //체이닝 하는 메서드를 이용해서 응답 받을 수 있음
+            console.log(response);
+        });
+
         //localStorage에 저장
         store.setLocalStorage(this.menu);
 
