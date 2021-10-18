@@ -225,7 +225,7 @@ function App(){
         //이전에 작성해둔 엔터누르면 실행되는 코드, 아무것도 없이 엔터하면 안되게 작성을 위해 위로 수정이동
         //if(e.key === "Enter"){
         //메뉴이름 받아서 저장하는 변수
-        const MenuName = $("#menu-name").value;
+        const menuName = $("#menu-name").value;
 
         //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
         //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
@@ -234,14 +234,19 @@ function App(){
         //새로운 메뉴 추가를 요청하기 위함 (서버에 요청하는 로직 , 위 주석된 코드는 상태를 추가하는 로직)
         //객체 생성은 POST라는 메서드 사용, 주고받는 컨텐츠 타입은 주로 json형태로 주고받음
         //localStorage에 데이터를 저장할 때 문자열로 저장하느라 JSON.stringify 이용 (키, 값 넣어서 요청)
-        fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, { //현재 주소까지 해줘야 잘 작동함
+        fetch(`${BASE_URL}/category/${this.currentCategory}/menu` ,{ //현재 주소까지 해줘야 잘 작동함
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({name:MenuName}),
-        }).then((response) => { //체이닝 하는 메서드를 이용해서 응답 받을 수 있음
+            body: JSON.stringify({ name: menuName}),
+        })
+        .then((response) => { //체이닝 하는 메서드를 이용해서 응답 받을 수 있음
             console.log(response);
+            return response.json();
+        })
+        .then((data) => {
+            console.log(data);
         });
 
         //localStorage에 저장
