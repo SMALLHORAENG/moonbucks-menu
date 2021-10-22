@@ -214,7 +214,7 @@ function App(){
     };
 
     //메뉴추가 함수
-    const addMenuName = () => {
+    const addMenuName = async() => {
         //빈값이면 알림뜨고 엔터 안되게 하기
     if($("#menu-name").value === ""){
         alert("값을 입력해주세요.");
@@ -227,14 +227,11 @@ function App(){
         //메뉴이름 받아서 저장하는 변수
         const menuName = $("#menu-name").value;
 
-        //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
-        //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
-        //this.menu[this.currentCategory].push({ name: MenuName }); , 서버와 통신을 위해 아래코드 사용
-
+        //api의 주소는 사이트에 있다
         //새로운 메뉴 추가를 요청하기 위함 (서버에 요청하는 로직 , 위 주석된 코드는 상태를 추가하는 로직)
         //객체 생성은 POST라는 메서드 사용, 주고받는 컨텐츠 타입은 주로 json형태로 주고받음
         //localStorage에 데이터를 저장할 때 문자열로 저장하느라 JSON.stringify 이용 (키, 값 넣어서 요청)
-        fetch(`${BASE_URL}/category/${this.currentCategory}/menu` ,{ //현재 주소까지 해줘야 잘 작동함
+    await fetch(`${BASE_URL}/category/${this.currentCategory}/menu` ,{ //현재 주소까지 해줘야 잘 작동함
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -245,12 +242,26 @@ function App(){
             console.log(response);
             return response.json();
         })
-        .then((data) => {
-            console.log(data);
+
+        //js는 싱글쓰레드(한번에 한가지의 일만 함), 먼저 요청한것에 대해서 먼저 응답을 받지 못할 수 있음
+        //카페의 진동벨과 같은 개념/ 먼저 제조가 쉬운 메뉴는 일찍 나올 수 있지만 진동벨과 같은 것 으로 약속을 함
+        //비동기 통신을 async await을 이용해서 순서를 보장해줄 수 있게 할 수 있음
+        //async await 사용법은 비동시통신이 있는 함수에 앞에 async 쓰고 기다리길 바라는 로직앞에 await 쓰면 됨
+    await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
+            .then((response) => {
+                return response.json();
+            })
+            .then((data) => {
+                this.menu[this.currentCategory] = data;
         });
 
+        //배열에 메뉴를 추가, push이용해서 새로운 객체를 담을 수 있다.
+        //menu 부분에 [this.currentCategory]가 들어간 이유, 현재의 메뉴판에 값 추가를 위함
+        //this.menu[this.currentCategory].push({ name: MenuName }); 
+        //서버와 통신을 위해 위 작성한 fetch코드를 이용
+
         //localStorage에 저장
-        store.setLocalStorage(this.menu);
+        //store.setLocalStorage(this.menu);
 
         // 요구사항에 있는 코드를 가져와서, 템플릿을 담을 변수를 만듦
         //MenuName 변수를 인자로 받아서 li태그에 넣을 수 있게 해줌
@@ -276,7 +287,8 @@ function App(){
         // </li>`;
         // }; 위에 template으로 만들어줬기 때문에 안씀
 
-        render();
+        //api 사용
+        //render();
 
 // <!-- beforebegin -->
 // <ul>
