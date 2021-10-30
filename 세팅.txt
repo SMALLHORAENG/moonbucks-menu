@@ -53,7 +53,7 @@ https://blog.makerjun.com/24443069-e1b0-416c-9e64-a27392487a5a
 원래 있던것에서 오류가 생겨서 수정한 값 - 기존값을 갖고있는 중괄호
 부분의 내용을 아래로 내리니 오류가 사라짐 (root 때문으로 보임)
 
-
+"liveServer.settings.port": 3000
 
 
 
