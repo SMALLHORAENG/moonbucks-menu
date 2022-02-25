@@ -128,6 +128,22 @@ const MenuApi = {
         //     return data; //데이터만 받아오면 되는 부분이라 데이터만 리턴해는 형태로 바꿈
         // });
     },
+    //addMenu에 있는 await fetch를 MenuApi에 넣음
+    //name은 다른명으로 해도 되지만 순서가 중요하고 잊지 않도록 약속이 중요
+    async createMenu(category, name) {
+        const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
+            //현재 주소까지 해줘야 잘 작동함 (/api/category/:category/menu)
+            method: "POST", //객체 생성시 주로 POST 사용 
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name }),
+        });
+        if (!response.ok) {
+            console.error("에러가 발생했습니다.");
+        }
+    },
+
 };
 
 //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
@@ -268,19 +284,23 @@ function App() {
         //새로운 메뉴 추가를 요청하기 위함 (서버에 요청하는 로직 , 위 주석된 코드는 상태를 추가하는 로직)
         //객체 생성은 POST라는 메서드 사용, 주고받는 컨텐츠 타입은 주로 json형태로 주고받음
         //localStorage에 데이터를 저장할 때 문자열로 저장하느라 JSON.stringify 이용 (키, 값 넣어서 요청)
-        await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
-            //현재 주소까지 해줘야 잘 작동함 (/api/category/:category/menu)
-            method: "POST", //객체 생성시 주로 POST 사용 
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name: menuName }),
-        }).then((response) => { //체이닝 하는 메서드를 이용해서 응답 받을 수 있음
-            console.log(response);
-            return response.json();
-        }).then((data) => {
-            console.log(data);
-        }); //보낸 데이터 확인
+
+        // MenuApi에 넣어줌
+        // await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
+        //     //현재 주소까지 해줘야 잘 작동함 (/api/category/:category/menu)
+        //     method: "POST", //객체 생성시 주로 POST 사용 
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ name: menuName }),
+        // }).then((response) => { //체이닝 하는 메서드를 이용해서 응답 받을 수 있음
+        //     console.log(response);
+        //     return response.json();
+        // }).then((data) => {
+        //     console.log(data);
+        // }); //보낸 데이터 확인
+
+        await MenuApi.createMenu(this.currentCategory, menuName);
 
         //fetch만 쓰면 문제가 생김 먼저쓴게 뒤에 찍힘
         //js는 싱글쓰레드(한번에 한가지의 일만 함), 먼저 요청한것에 대해서 먼저 응답을 받지 못할 수 있음
@@ -288,20 +308,20 @@ function App() {
         //비동기 통신을 async await을 이용해서 순서를 보장해줄 수 있게 할 수 있음
         //async await 사용법은 비동시통신이 있는 함수에 앞에 async 쓰고 기다리길 바라는 로직앞에 await 쓰면 됨
 
-        await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
-            .then((response) => {
-                return response.json();
-            })
-            .then((data) => {
-                //console.log(data);
-                //추가된 데이터 넣어주기
-                this.menu[this.currentCategory] = data
-                //input 비우기
-                $("#menu-name").value = "";
-            });
+        // await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
+        //     .then((response) => {
+        //         return response.json();
+        //     })
+        //     .then((data) => {
+        //         //console.log(data);
+        //         //추가된 데이터 넣어주기
+        //         this.menu[this.currentCategory] = data
+        //         //input 비우기
+        //         $("#menu-name").value = "";
+        //     });
 
 
-        const data = await MenuApi.getAllMenuByCategory(this.currentCategory)
+        this.menu(this.currentCategory) = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
         $("#menu-name").value = "";
 
@@ -463,7 +483,7 @@ function App() {
             });
 
         //다른 메뉴판으로 갈 때 이벤트
-        $("nav").addEventListener("click", (e) => {
+        $("nav").addEventListener("click", async (e) => {
             //클래스 cafe-category-name인거 있는지 찾는 함수
             const isCategoryButton = e.target.classList.contains("cafe-category-name")
 
@@ -475,7 +495,7 @@ function App() {
 
                 //html에 category-title라는 id값을 <h2> 부분인 타이틀에 추가해준 뒤 불러와서 넣어주기
                 $("#category-title").innerText = `${e.target.innerText} 메뉴 관리`;
-
+                await MenuApi.getAllMenuByCategory(this.currentCategory);
                 render();
             }
         });
