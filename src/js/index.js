@@ -143,7 +143,20 @@ const MenuApi = {
             console.error("에러가 발생했습니다.");
         }
     },
-
+    async updateMenu(category, name, menuId) {
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
+            method: "PUT",
+            //생성은 POST , 수정은 PUT
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ name }),
+        });
+        if (!response.ok) {
+            console.error("에러가 발생했습니다.");
+        }
+        return response.json();
+    },
 };
 
 //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
@@ -203,10 +216,11 @@ function App() {
             .map((menuItem, index) => {
                 //menuItem.name은 입력한 메뉴의 이름을 나타내고 index는 배열을 나타냄 
                 //menuItem.soldOut는 품절인지에 대해서 나와서 삼항연산자고 품절이면 soldOut클래스가 추가됨 아니면 추가X
+                //menuItem.id로 하면 아이디 값 활용 가능함 (서버를 이용하니 해주는게 좋음)
                 return `
-        <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
+        <li data-menu-id="${menuItem.id}" class="menu-list-item d-flex items-center py-2">
 
-        <span class="${menuItem.soldOut ? 'sold-out' : ""} w-100 pl-2 menu-name 
+        <span class=" w-100 pl-2 menu-name ${menuItem.soldOut ? "sold-out" : ""}  
         ">${menuItem.name}</span>
 
         <button
@@ -320,8 +334,8 @@ function App() {
         //         $("#menu-name").value = "";
         //     });
 
-
-        this.menu(this.currentCategory) = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        //괄호의 모양에 따라서도 오류가 생길 수 있으니 잘 파악해보자
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
         $("#menu-name").value = "";
 
@@ -371,7 +385,7 @@ function App() {
     };
 
     //메뉴수정 함수, 수정하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
-    const updateMenuName = (e) => {
+    const updateMenuName = async (e) => {
         //마크업 부분에 생성할 때 만들어준 id값인 index를 가져옴
         //dataset속성을 이용해서 데이터속성에 접근 가능(속성이 동적으로 만들어져서 활용가능)
         const menuId = e.target.closest("li").dataset.menuId;
@@ -387,14 +401,18 @@ function App() {
         //prompt를 통해서 받은 값은 수정된 값, 디폴트값은 수정받은 텍스트를 담는 변수이기도 함 
         const upDatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
 
+        await MenuApi.updateMenu(this.currentCategory, upDatedMenuName, menuId);
+
+
+
         //클릭한 메뉴 아이템 어떤 원소인지 아는 방법은 유일한 ID값 추가
         //데이터 생성하는 부분에서 data-menu-id=""${index}로 해주는데
         //menuItem이 아니라 배열의 값을 index로 함(유일한 값으로 안되기 때문에 새로 생성한 것)
         //this.menu[menuId].name = upDatedMenuName;
-        this.menu[this.currentCategory][menuId].name = upDatedMenuName;
+        //this.menu[this.currentCategory][menuId].name = upDatedMenuName;
 
         //메뉴가 업데이트 되게 하기위함 (최대한 데이터 변경을 최소화 해주는것이 좋음)
-        store.setLocalStorage(this.menu);
+        //store.setLocalStorage(this.menu);
 
         //받아온 li태그의 menu-name 클래스가 들어간 곳의 innerText를 입력한 값을 넣어서 수정해줌
         //$menuName.innerText = upDatedMenuName; -> render() 함수를 이용해서 리펙터링
