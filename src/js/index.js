@@ -157,6 +157,18 @@ const MenuApi = {
         }
         return response.json();
     },
+    //토글, 품절 처리하기(온 오프로 생각하면 됨 토글은)
+    async toggleSoldOutMenu(category, menuId) {
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/soldout`,
+            {
+                method: "PUT",
+            }
+        );
+        console.log(response);
+        if (!response.ok) {
+            console.error("에러가 발생했습니다.");
+        }
+    }
 };
 
 //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
@@ -220,7 +232,7 @@ function App() {
                 return `
         <li data-menu-id="${menuItem.id}" class="menu-list-item d-flex items-center py-2">
 
-        <span class=" w-100 pl-2 menu-name ${menuItem.soldOut ? "sold-out" : ""}  
+        <span class=" w-100 pl-2 menu-name ${menuItem.isSoldOut ? "sold-out" : ""}  
         ">${menuItem.name}</span>
 
         <button
@@ -403,7 +415,9 @@ function App() {
 
         await MenuApi.updateMenu(this.currentCategory, upDatedMenuName, menuId);
 
-
+        //아래 코드가 없다면 수정을 해도 자동으로 업데이트가 되지 않음(리스트를 불러와줌)
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        //위 코드의 경우 this를 이용해서 카테고리를 가져옴 이걸 이용해서 랜더링
 
         //클릭한 메뉴 아이템 어떤 원소인지 아는 방법은 유일한 ID값 추가
         //데이터 생성하는 부분에서 data-menu-id=""${index}로 해주는데
@@ -440,15 +454,19 @@ function App() {
     };
 
     //메뉴품절 함수, 
-    const soldOutMenu = (e) => {
+    const soldOutMenu = async (e) => {
         const menuId = e.target.closest("li").dataset.menuId;
+
+        await MenuApi.toggleSoldOutMenu(this.currentCategory, menuId);
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+
         //클릭할 때 현재 카테고리의 menuId의 값이 soldOut가 true가 됨
         //추가로 불 연산자(논리연산자)를 사용해서 다시 클릭해서 품절상태를 없애기 위해 적용
         //처음 값인 undefined의 값에서 !를 사용해서 true의 값이 나오고 또 클릭시 반대되는 false가 나온다
-        this.menu[this.currentCategory][menuId].soldOut =
-            //!는 논리적부정을 의미함 - 값을 반대로 바꿔줌 treu -> false
-            !this.menu[this.currentCategory][menuId].soldOut;
-        store.setLocalStorage(this.menu);
+        //this.menu[this.currentCategory][menuId].soldOut =
+        //!는 논리적부정을 의미함 - 값을 반대로 바꿔줌 treu -> false
+        //!this.menu[this.currentCategory][menuId].soldOut;
+        //store.setLocalStorage(this.menu);
         //render 해서 soldout이면 soldout 클래스를 넣고 아니면 안넣는 것 render함수에서 구현 (span부분)
         render();
     }
