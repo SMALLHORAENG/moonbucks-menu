@@ -159,12 +159,20 @@ const MenuApi = {
     },
     //토글, 품절 처리하기(온 오프로 생각하면 됨 토글은)
     async toggleSoldOutMenu(category, menuId) {
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/soldout`,
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`,
             {
                 method: "PUT",
             }
         );
         console.log(response);
+        if (!response.ok) {
+            console.error("에러가 발생했습니다.");
+        }
+    },
+    async deleteMenu(category, menuId) {
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
+            method: "DELETE",
+        });
         if (!response.ok) {
             console.error("에러가 발생했습니다.");
         }
@@ -434,14 +442,20 @@ function App() {
     };
 
     //메뉴삭제 함수, 삭제하는 함수를 이용할 때 매개변수(parameter)를 넘겨줘야 잘 작동함
-    const removeMenuName = (e) => {
+    const removeMenuName = async (e) => {
         if (confirm("정말 삭제하시겠습니까?")) {
             //삭제할 것을 알기위한 menuId 가져오기
             const menuId = e.target.closest("li").dataset.menuId;
+            //삭제
+            await MenuApi.deleteMenu(this.currentCategory, menuId);
+            //불러오기
+            this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
+                this.currentCategory);
+
             //splice는 배열의 특정 원소를 삭제 괄호는(삭제 할 배열, 몇개를 삭제할지)
-            this.menu[this.currentCategory].splice(menuId, 1);
+            //this.menu[this.currentCategory].splice(menuId, 1);
             //localStorage업데이트
-            store.setLocalStorage(this.menu);
+            //store.setLocalStorage(this.menu);
 
             //찾은 태그의 가장 가까운것을 찾아주기 때문에 잘 작동됨(클릭한 곳에서 가장 가까운 li태그)
             //remove는 ()로 마무리 해줘야 작동 됨
@@ -456,9 +470,13 @@ function App() {
     //메뉴품절 함수, 
     const soldOutMenu = async (e) => {
         const menuId = e.target.closest("li").dataset.menuId;
-
+        //품절
         await MenuApi.toggleSoldOutMenu(this.currentCategory, menuId);
-        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        console.log(menuId);
+        //불러오기
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(
+            this.currentCategory);
+        console.log(this.currentCategory);
 
         //클릭할 때 현재 카테고리의 menuId의 값이 soldOut가 true가 됨
         //추가로 불 연산자(논리연산자)를 사용해서 다시 클릭해서 품절상태를 없애기 위해 적용
