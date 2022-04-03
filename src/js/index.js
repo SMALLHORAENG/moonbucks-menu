@@ -84,6 +84,7 @@
 
 import { $ } from "./utils/dom.js";
 import store from "./store/index.js";
+import MenuApi from "../api/index.js";
 
 //html의 element를 가져올 때 $표시를 관용적으로 사용 함, id값을 받는 querySelector를 리턴해주는걸 의미함
 // querySelector() 이 $가 되는 것
@@ -105,79 +106,7 @@ import store from "./store/index.js";
 // };
 // 이 부분은 store폴더의 index.js로 이동
 
-//"liveServer.settings.port": 3000, 를 이용해서 live server의 JSON을 수정해주면 포트번호 바꿀 수 있다
-//재사용을 위해서 BASE_URL로 해줌 3000의 뒤에 있는 api는 이해하기 쉽게 하기위해서 넣어주면 좋음
-const BASE_URL = "http://localhost:3000/api"; //사용할 때 현재 주소를 알 수 있도록 해줘야 함
-//fetch('url',옵션) 주소와 옵션 , 얻어오다는 의미 (요청주소 보내면 , 옵션으로 구체적 약속을 넣어줌)
 
-const MenuApi = {
-    async getAllMenuByCategory(category) {
-        //수정 후 코드
-        const response = await fetch(`${BASE_URL}/category/${category}/menu`);
-        return response.json();
-        //여기서는 this를 쓰게되면 오류가 생김 왜냐하면 여기서의 this는 MenuAPi를 의미하기 때문
-
-        //수정 전 코드
-        //오류 이유, 전체의 리턴값을 넘겨줘야 하는데 함수의 체이닝 한 부분만 넘겨주다 보니 
-        //then으로 붙여주는 형태에서만 받을 수 있는데 함수의 리턴값으로 데이터를 내려주기 위해서
-        //await fetch를 해주게 되면 then 안쓰고도 response 객체를 받아올 수 있음
-        // .then((response) => {
-        //     return response.json();
-        // })
-        // .then((data) => {
-        //     return data; //데이터만 받아오면 되는 부분이라 데이터만 리턴해는 형태로 바꿈
-        // });
-    },
-    //addMenu에 있는 await fetch를 MenuApi에 넣음
-    //name은 다른명으로 해도 되지만 순서가 중요하고 잊지 않도록 약속이 중요
-    async createMenu(category, name) {
-        const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
-            //현재 주소까지 해줘야 잘 작동함 (/api/category/:category/menu)
-            method: "POST", //객체 생성시 주로 POST 사용 
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name }),
-        });
-        if (!response.ok) {
-            console.error("에러가 발생했습니다.");
-        }
-    },
-    async updateMenu(category, name, menuId) {
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
-            method: "PUT",
-            //생성은 POST , 수정은 PUT
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ name }),
-        });
-        if (!response.ok) {
-            console.error("에러가 발생했습니다.");
-        }
-        return response.json();
-    },
-    //토글, 품절 처리하기(온 오프로 생각하면 됨 토글은)
-    async toggleSoldOutMenu(category, menuId) {
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`,
-            {
-                method: "PUT",
-            }
-        );
-        console.log(response);
-        if (!response.ok) {
-            console.error("에러가 발생했습니다.");
-        }
-    },
-    async deleteMenu(category, menuId) {
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
-            method: "DELETE",
-        });
-        if (!response.ok) {
-            console.error("에러가 발생했습니다.");
-        }
-    }
-};
 
 //addEventListener 이벤트 추가 (괄호내용은 이벤트 실행 시 e에 값을 담아서 보내줌, e.key를 이용해서 받음)
 //if를 이용해서 엔터를 입력시 값을 받아오는것으로 만들어보자
@@ -204,7 +133,7 @@ function App() {
         console.log(MenuApi.getAllMenuByCategory(this.currentCategory));
         //Promise(<pending>)라는 에러가 뜸, promise는 진동벨과 같은 의미인데 안에 메뉴가 없으니 렌더링 안됨
         //비동기 통신을 하는 곳 모두다 async await를 써줘야 함 (수정완)
-        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        // this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         // await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
         //     .then((response) => {
         //         return response.json();
@@ -226,22 +155,27 @@ function App() {
     };
 
     //그려주는, 렌더링 해주는 함수
-    const render = () => {
+    const render = async () => {
+        //render 함수 호출될 떄 먼저 실행될 수 있도록 해줌
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         //map 메서드는 화면별로 마크업 만들기 위해 사용함, menu모아서 새로운 배열로 만들어 줌
         //menu 각각의 item들을 순회하면서 li태그마다 아래의 return된 li태그 마크업의 값이 들어감(원소로)
         //최종적으로 하나의 배열을 만들어준다, 그래서 변수로 만들어서 담는다
         //['<li></li>', '<li></li>'] 이런식으로
         const template = this.menu[this.currentCategory]
             //map는 모든 배열의 아이템에 함수를 실행하는 메서드   
-            .map((menuItem, index) => {
+            .map((menuItem) => {
                 //menuItem.name은 입력한 메뉴의 이름을 나타내고 index는 배열을 나타냄 
                 //menuItem.soldOut는 품절인지에 대해서 나와서 삼항연산자고 품절이면 soldOut클래스가 추가됨 아니면 추가X
                 //menuItem.id로 하면 아이디 값 활용 가능함 (서버를 이용하니 해주는게 좋음)
                 return `
-        <li data-menu-id="${menuItem.id}" class="menu-list-item d-flex items-center py-2">
+        <li data-menu-id="${
+            menuItem.id
+        }" class="menu-list-item d-flex items-center py-2">
 
-        <span class=" w-100 pl-2 menu-name ${menuItem.isSoldOut ? "sold-out" : ""}  
-        ">${menuItem.name}</span>
+        <span class=" w-100 pl-2 menu-name ${
+            menuItem.isSoldOut ? "sold-out" : ""
+        }  ">${menuItem.name}</span>
 
         <button
             type="button"
@@ -295,7 +229,7 @@ function App() {
         // $(".menu-count").innerText = `총 ${menuCount} 개`;
         // 수정 후
         const menuCount = this.menu[this.currentCategory].length;
-        $(".menu-count").innerText = `총 ${this.menu[this.currentCategory].length} 개`;
+        $(".menu-count").innerText = `총 ${menuCount} 개`;
     };
 
     //메뉴추가 함수
@@ -355,7 +289,7 @@ function App() {
         //     });
 
         //괄호의 모양에 따라서도 오류가 생길 수 있으니 잘 파악해보자
-        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        // this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
         $("#menu-name").value = "";
 
@@ -424,7 +358,7 @@ function App() {
         await MenuApi.updateMenu(this.currentCategory, upDatedMenuName, menuId);
 
         //아래 코드가 없다면 수정을 해도 자동으로 업데이트가 되지 않음(리스트를 불러와줌)
-        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+        // this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         //위 코드의 경우 this를 이용해서 카테고리를 가져옴 이걸 이용해서 랜더링
 
         //클릭한 메뉴 아이템 어떤 원소인지 아는 방법은 유일한 ID값 추가
@@ -489,6 +423,22 @@ function App() {
         render();
     }
 
+    const changeCategory = (e) => {
+        //클래스 cafe-category-name인거 있는지 찾는 함수
+        const isCategoryButton = e.target.classList.contains("cafe-category-name")
+
+        //true , false로 값을 받아오기 때문에 함수이름으로 넣어줌
+        if (isCategoryButton) {
+            //카테고리 이름 불러와서 categoryName에 넣어줌
+            const categoryName = e.target.dataset.categoryName;
+            this.currentCategory = categoryName;
+
+            //html에 category-title라는 id값을 <h2> 부분인 타이틀에 추가해준 뒤 불러와서 넣어주기
+            $("#category-title").innerText = `${e.target.innerText} 메뉴 관리`;
+            render();
+    }
+
+};
 
     //이 함수안에 이벤트를 추가하면 되기 떄문에 분리해서 사용하기에 유용하다
     const initEventListeners = () => {
@@ -537,24 +487,10 @@ function App() {
             });
 
         //다른 메뉴판으로 갈 때 이벤트
-        $("nav").addEventListener("click", async (e) => {
-            //클래스 cafe-category-name인거 있는지 찾는 함수
-            const isCategoryButton = e.target.classList.contains("cafe-category-name")
+        $("nav").addEventListener("click", changeCategory); 
 
-            //true , false로 값을 받아오기 때문에 함수이름으로 넣어줌
-            if (isCategoryButton) {
-                //카테고리 이름 불러와서 categoryName에 넣어줌
-                const categoryName = e.target.dataset.categoryName;
-                this.currentCategory = categoryName;
-
-                //html에 category-title라는 id값을 <h2> 부분인 타이틀에 추가해준 뒤 불러와서 넣어주기
-                $("#category-title").innerText = `${e.target.innerText} 메뉴 관리`;
-                await MenuApi.getAllMenuByCategory(this.currentCategory);
-                render();
-            }
-        });
-    }
-
+        
+        }
 }
 
 //App 실행, app.init을 실행
